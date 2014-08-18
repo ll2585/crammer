@@ -16,7 +16,8 @@ class MainWidget(QtGui.QWidget):
 		self.initUI()
 		
 	def initUI(self):
-
+		if not self.hasFocus():
+			self.setFocus()
 		self.cardLabel = QtGui.QLabel()
 		card = QtGui.QLabel('Card')
 		sideLabel = QtGui.QLabel('Front Side')
@@ -67,7 +68,7 @@ class MainWidget(QtGui.QWidget):
 			self.showCard()
 			self.updateGui()
 		else:
-			print("OOPS")
+			self.parent.showResults()
 
 	def previous(self):
 		if(controller.cardNumber > 0):
@@ -107,13 +108,13 @@ class MainWidget(QtGui.QWidget):
 		self.knownCheckbox.setChecked(controller.curCardKnown())
 
 	def keyPressEvent(self, e):
-		if (e.key() == QtCore.Qt.Key_D):
+		if (e.key() == QtCore.Qt.Key_Right):
 			self.next()
-		elif(e.key() == QtCore.Qt.Key_A):
+		elif(e.key() == QtCore.Qt.Key_Left):
 			self.previous()
-		elif(e.key() == QtCore.Qt.Key_S or e.key() == QtCore.Qt.Key_W):
+		elif(e.key() == QtCore.Qt.Key_Down or e.key() == QtCore.Qt.Key_Up):
 			self.flip()
-		elif(e.key() == QtCore.Qt.Key_Z):
+		elif(e.key() == QtCore.Qt.Key_Space):
 			self.modifyKnown()
 
 
@@ -189,6 +190,109 @@ class MainWindow(QtGui.QMainWindow):
 		msgBox.setWindowTitle("About")
 		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
 		msgBox.exec_()
+
+	def showResults(self):
+		self.resultsScreen = ResultsWidget(self) 
+		self.setCentralWidget(self.resultsScreen)
+
+class ResultsWidget(QtGui.QWidget):
+	
+	def __init__(self, parent):
+		super(ResultsWidget, self).__init__(parent)
+		self.parent = parent
+		self.initUI()
+		
+	def initUI(self):
+		if not self.hasFocus():
+			self.setFocus()
+		self.statusLabel = QtGui.QLabel("Try Harder!")
+		self.knownLabel = QtGui.QLabel('You knew 0/8 cards!')
+		self.keepCheckBox = QtGui.QCheckBox('Keep all known cards', self)
+		mainLayout = QtGui.QVBoxLayout() 
+
+		self.previousButton = QtGui.QPushButton('Last', self)
+		self.previousButton.clicked.connect(self.previous)
+		flipButton = QtGui.QPushButton('Flip', self)
+		flipButton.clicked.connect(self.flip)
+		self.knownCheckbox = QtGui.QCheckBox('Known', self)
+		self.knownCheckbox.clicked.connect(self.modifyKnown)
+		self.nextButton = QtGui.QPushButton('Next', self)
+		self.nextButton.clicked.connect(self.next)
+
+		bottomBar = QtGui.QHBoxLayout()
+		bottomBar.addWidget(self.previousButton)
+		bottomBar.addWidget(flipButton)
+		bottomBar.addWidget(self.knownCheckbox)
+		bottomBar.addWidget(self.nextButton)
+
+		mainLayout.addWidget(self.statusLabel)
+		mainLayout.addWidget(self.knownLabel)
+		mainLayout.addWidget(self.keepCheckBox)
+		self.setLayout(mainLayout)
+
+
+	def flip(self):
+		if(self.showingFront):
+			self.shownSide.setText(self.curCard.getBack())
+			self.showingFront = False
+		else:
+			self.shownSide.setText(self.curCard.getFront())
+			self.showingFront = True
+
+	def next(self):
+		if(controller.cardNumber + 1 < len(controller.deck)):
+			controller.nextCard()
+			self.showCard()
+			self.updateGui()
+		else:
+			self.parent.showResults()
+
+	def previous(self):
+		if(controller.cardNumber > 0):
+			controller.previousCard()
+			self.showCard()
+			self.updateGui()
+		else:
+			print("OOPS")
+
+	def showCard(self):
+		self.curCard = controller.getCurCard()
+		self.showingFront = True
+
+	def start(self):
+		print(self.optionsTab.getDelay())
+		controller.startRunning()
+
+	def modifyKnown(self):
+		cardStatus = controller.curCardKnown()
+		controller.setCardStatus(not cardStatus)
+		self.updateGui()
+
+
+	def updateGui(self):
+		self.shownSide.setText(self.curCard.getFront())
+		self.cardLabel.setText("Card %s/%s" %(controller.cardNumber+1, len(controller.deck)))
+		if(controller.cardNumber == 0):
+			self.previousButton.setEnabled(False)
+		else:
+			self.previousButton.setEnabled(True)
+
+		if(controller.cardNumber == len(controller.deck)-1):
+			self.nextButton.setText("To Results!")
+		else:
+			self.nextButton.setText('Next')
+
+		self.knownCheckbox.setChecked(controller.curCardKnown())
+
+	def keyPressEvent(self, e):
+		if (e.key() == QtCore.Qt.Key_Right):
+			self.next()
+		elif(e.key() == QtCore.Qt.Key_Left):
+			self.previous()
+		elif(e.key() == QtCore.Qt.Key_Down or e.key() == QtCore.Qt.Key_Up):
+			self.flip()
+		elif(e.key() == QtCore.Qt.Key_Space):
+			self.modifyKnown()
 
 class APIKeyTable(QtGui.QTableWidget):
 	def __init__(self, data, *args):
