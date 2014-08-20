@@ -9,10 +9,10 @@ class NoTypeTextEdit(QtGui.QTextEdit):
 
 class MainWidget(QtGui.QWidget):
 	
-	def __init__(self, parent):
+	def __init__(self, parent, cards):
 		super(MainWidget, self).__init__(parent)
 		self.parent = parent
-		controller.makeCards("tem")
+		controller.makeCards(cards)
 		self.initUI()
 		
 	def initUI(self):
@@ -117,6 +117,9 @@ class MainWidget(QtGui.QWidget):
 		elif(e.key() == QtCore.Qt.Key_Space):
 			self.modifyKnown()
 
+	def numCards(self):
+		return controller.size()
+
 
 class OptionsTab(QtGui.QWidget):
 	
@@ -174,9 +177,9 @@ class OptionsTab(QtGui.QWidget):
 
 class MainWindow(QtGui.QMainWindow):
 	
-	def __init__(self):
+	def __init__(self, cards = None):
 		super(MainWindow, self).__init__()
-		self.mainWidget = MainWidget(self) 
+		self.mainWidget = MainWidget(self, cards) 
 		self.setCentralWidget(self.mainWidget)
 		self.initUI()
 		
