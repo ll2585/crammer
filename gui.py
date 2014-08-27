@@ -120,6 +120,9 @@ class MainWidget(QtGui.QWidget):
 	def numCards(self):
 		return controller.size()
 
+	def knownCards(self):
+		return controller.knownCards()
+
 
 class OptionsTab(QtGui.QWidget):
 	
@@ -179,7 +182,7 @@ class MainWindow(QtGui.QMainWindow):
 	
 	def __init__(self, cards = None):
 		super(MainWindow, self).__init__()
-		self.mainWidget = MainWidget(self, cards) 
+		self.mainWidget = MainWidget(self, cards)
 		self.setCentralWidget(self.mainWidget)
 		self.initUI()
 		
@@ -327,7 +330,7 @@ class APIKeyTable(QtGui.QTableWidget):
 def main():
 	
 	app = QtGui.QApplication(sys.argv)
-	ex = MainWindow()
+	ex = MainWindow("test.csv")
 	sys.exit(app.exec_())
 
 if __name__ == '__main__':

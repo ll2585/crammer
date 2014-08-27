@@ -3,7 +3,7 @@ class Card():
 		self.front = front
 		self.back = back
 		self.known = False
-
+		
 	def getFront(self):
 		return self.front
 

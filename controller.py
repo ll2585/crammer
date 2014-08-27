@@ -40,3 +40,10 @@ def loadCards(file):
 
 def size():
 	return len(deck)
+
+def knownCards():
+	known = 0
+	for c in deck:
+		if c.getStatus():
+			known += 1
+	return known
