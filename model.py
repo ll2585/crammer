@@ -43,5 +43,17 @@ class Deck():
 		return cards
 
 	def getCardAt(self, location):
-		assert location < self.size()
 		return self.cards[location]
+
+	def knownCards(self):
+		result = 0
+		for c in self.cards:
+			result += c.getStatus()
+		return result
+
+	def unknownDeck(self):
+		unknownDeck = Deck()
+		for c in self.cards:
+			if(not c.getStatus()):
+				unknownDeck.addCard(c)
+		return unknownDeck

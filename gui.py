@@ -13,10 +13,10 @@ class NoTypeTextEdit(QtGui.QTextEdit):
 
 class MainWidget(QtGui.QWidget):
 	
-	def __init__(self, parent, cards):
+	def __init__(self, parent, cards, hideKnownCards=False):
 		super(MainWidget, self).__init__(parent)
 		self.parent = parent
-		self.controller = controller.Controller(self)
+		self.controller = controller.Controller(self, hideKnownCards = hideKnownCards)
 		self.controller.makeCards(cards)
 		self.initUI()
 		
@@ -68,12 +68,12 @@ class MainWidget(QtGui.QWidget):
 			self.showingFront = True
 
 	def next(self):
-		if(self.controller.cardNumber + 1 < len(self.controller.deck)):
+		if(self.controller.cardNumber + 1 < self.controller.size()):
 			self.controller.nextCard()
 			self.showCard()
 			self.updateGui()
 		else:
-			self.parent.showResults()
+			self.parent.showResults(self.controller)
 
 	def previous(self):
 		if(self.controller.cardNumber > 0):
@@ -99,13 +99,13 @@ class MainWidget(QtGui.QWidget):
 
 	def updateGui(self):
 		self.shownSide.setText(self.curCard.getFront())
-		self.cardLabel.setText("Card %s/%s" %(self.controller.cardNumber+1, len(self.controller.deck)))
+		self.cardLabel.setText("Card %s/%s" %(self.controller.cardNumber+1, self.controller.size()))
 		if(self.controller.cardNumber == 0):
 			self.previousButton.setEnabled(False)
 		else:
 			self.previousButton.setEnabled(True)
 
-		if(self.controller.cardNumber == len(self.controller.deck)-1):
+		if(self.controller.cardNumber == self.controller.size()-1):
 			self.nextButton.setText("To Results!")
 		else:
 			self.nextButton.setText('Next')
@@ -208,16 +208,21 @@ class MainWindow(QtGui.QMainWindow):
 		self.setCentralWidget(self.resultsScreen)
 
 	def showAllCards(self):
+		self.mainWidget = MainWidget(self, self.cards, hideKnownCards = True)
+		self.setCentralWidget(self.mainWidget)
+
+	def showUnknownCards(self):
 		self.mainWidget = MainWidget(self, self.cards)
 		self.setCentralWidget(self.mainWidget)
 
 class ResultsWidget(QtGui.QWidget):
 	
-	def __init__(self, parent):
+	def __init__(self, parent, controller):
 		super(ResultsWidget, self).__init__(parent)
 		self.parent = parent
-		self.cardsKnown = controller.knownCards()
-		self.totalCards = controller.size()
+		self.controller = controller
+		self.cardsKnown = self.controller.knownCards()
+		self.totalCards = self.controller.size()
 		self.initUI()
 		
 	def initUI(self):
@@ -265,9 +270,12 @@ class ResultsWidget(QtGui.QWidget):
 
 	def restart(self):
 		logger.info('Pressed restart')
+		self.controller.reset()
+		self.parent.showUnknownCards()
 
 	def restartAll(self):
 		logger.info('Pressed restart all')
+		self.controller.reset()
 		self.parent.showAllCards()
 
 	def showCard(self):

@@ -11,15 +11,6 @@ class GuiTester(unittest.TestCase):
 		'''Create the GUI'''
 		self.app = QApplication(sys.argv)
 
-	def test_defaults(self):
-		self.form = gui.MainWindow()
-		self.assertTrue('Card' in self.form.mainWidget.cardLabel.text())
-		self.assertTrue('1' in self.form.mainWidget.cardLabel.text())
-
-		#click next with mouse
-		nextButton = self.form.mainWidget.nextButton
-		QTest.mouseClick(nextButton, Qt.LeftButton)
-		self.assertFalse('1' in self.form.mainWidget.cardLabel.text())
 
 	def test_demo(self):
 		self.form = gui.MainWindow("test.csv")
@@ -55,6 +46,7 @@ class GuiTester(unittest.TestCase):
 		QTest.mouseClick(nextButton, Qt.LeftButton)
 		QTest.mouseClick(nextButton, Qt.LeftButton)
 		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
 		results = self.form.resultsScreen
 		self.assertEqual(self.form.mainWidget.knownCards(), 3)
 		self.assertTrue('3/8' in results.knownLabel.text())
@@ -63,7 +55,7 @@ class GuiTester(unittest.TestCase):
 		cardScreen = self.form.mainWidget
 		self.assertEqual(self.form.mainWidget.numCards(), 8)
 
-	@unittest.skip("finish later")
+
 	def test_restartThree(self):
 		
 		self.form = gui.MainWindow("test.csv")
@@ -78,6 +70,7 @@ class GuiTester(unittest.TestCase):
 		knownCheckbox.click()
 		QTest.mouseClick(nextButton, Qt.LeftButton)
 		knownCheckbox.click()
+		QTest.mouseClick(nextButton, Qt.LeftButton)
 		QTest.mouseClick(nextButton, Qt.LeftButton)
 		QTest.mouseClick(nextButton, Qt.LeftButton)
 		QTest.mouseClick(nextButton, Qt.LeftButton)
