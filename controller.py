@@ -1,49 +1,35 @@
 import model
 
-deck = None
-cardNumber = 0
+class Controller():
+	def __init__(self, gui):
+		self.gui = gui
+		self.deck = None
+		self.cardNumber = 0
 
-def getCurCard():
-	return deck[cardNumber]
+	def getCurCard(self):
+		return self.deck.getCardAt(self.cardNumber)
 
-def makeCards(cards = None):
-	global deck
-	if(cards == None):
-		deck = [model.Card("front1", "back1"), model.Card("front2", "back2")]
-	else:
-		loadCards(cards)
+	def makeCards(self, cards = None):
+		self.deck = model.Deck(cards)
 
-def nextCard():
-	global cardNumber
-	cardNumber += 1
+	def nextCard(self):
+		self.cardNumber += 1
 
-def previousCard():
-	global cardNumber
-	cardNumber -= 1
+	def previousCard(self):
+		self.cardNumber -= 1
 
-def curCardKnown():
-	return deck[cardNumber].getStatus()
+	def curCardKnown(self):
+		return self.getCurCard.getStatus()
 
-def setCardStatus(status):
-	global deck
-	deck[cardNumber].setStatus(status)
+	def setCardStatus(self, status):
+		self.getCurCard.setStatus(status)
 
-def loadCards(file):
-	global deck
-	import csv
-	deck = []
-	with open(file) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			c = model.Card(row[0], row[1])
-			deck.append(c)
+	def size(self):
+		return len(self.deck)
 
-def size():
-	return len(deck)
-
-def knownCards():
-	known = 0
-	for c in deck:
-		if c.getStatus():
-			known += 1
-	return known
+	def knownCards(self):
+		self.known = 0
+		for c in self.deck:
+			if c.getStatus():
+				self.known += 1
+		return self.known

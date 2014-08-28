@@ -1,7 +1,11 @@
 import controller
 import os, sys 
+import logging
 from PyQt4 import QtGui, QtCore
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+logger.info('Started')
 class NoTypeTextEdit(QtGui.QTextEdit):
 
 	def keyPressEvent(self, event):
@@ -12,7 +16,8 @@ class MainWidget(QtGui.QWidget):
 	def __init__(self, parent, cards):
 		super(MainWidget, self).__init__(parent)
 		self.parent = parent
-		controller.makeCards(cards)
+		self.controller = controller.Controller(self)
+		self.controller.makeCards(cards)
 		self.initUI()
 		
 	def initUI(self):
@@ -63,23 +68,23 @@ class MainWidget(QtGui.QWidget):
 			self.showingFront = True
 
 	def next(self):
-		if(controller.cardNumber + 1 < len(controller.deck)):
-			controller.nextCard()
+		if(self.controller.cardNumber + 1 < len(self.controller.deck)):
+			self.controller.nextCard()
 			self.showCard()
 			self.updateGui()
 		else:
 			self.parent.showResults()
 
 	def previous(self):
-		if(controller.cardNumber > 0):
-			controller.previousCard()
+		if(self.controller.cardNumber > 0):
+			self.controller.previousCard()
 			self.showCard()
 			self.updateGui()
 		else:
 			print("OOPS")
 
 	def showCard(self):
-		self.curCard = controller.getCurCard()
+		self.curCard = self.controller.getCurCard()
 		self.showingFront = True
 
 	def start(self):
@@ -87,25 +92,25 @@ class MainWidget(QtGui.QWidget):
 		controller.startRunning()
 
 	def modifyKnown(self):
-		cardStatus = controller.curCardKnown()
-		controller.setCardStatus(not cardStatus)
+		cardStatus = self.controller.curCardKnown()
+		self.controller.setCardStatus(not cardStatus)
 		self.updateGui()
 
 
 	def updateGui(self):
 		self.shownSide.setText(self.curCard.getFront())
-		self.cardLabel.setText("Card %s/%s" %(controller.cardNumber+1, len(controller.deck)))
-		if(controller.cardNumber == 0):
+		self.cardLabel.setText("Card %s/%s" %(self.controller.cardNumber+1, len(self.controller.deck)))
+		if(self.controller.cardNumber == 0):
 			self.previousButton.setEnabled(False)
 		else:
 			self.previousButton.setEnabled(True)
 
-		if(controller.cardNumber == len(controller.deck)-1):
+		if(self.controller.cardNumber == len(self.controller.deck)-1):
 			self.nextButton.setText("To Results!")
 		else:
 			self.nextButton.setText('Next')
 
-		self.knownCheckbox.setChecked(controller.curCardKnown())
+		self.knownCheckbox.setChecked(self.controller.curCardKnown())
 
 	def keyPressEvent(self, e):
 		if (e.key() == QtCore.Qt.Key_Right):
@@ -118,10 +123,10 @@ class MainWidget(QtGui.QWidget):
 			self.modifyKnown()
 
 	def numCards(self):
-		return controller.size()
+		return self.controller.size()
 
 	def knownCards(self):
-		return controller.knownCards()
+		return self.controller.knownCards()
 
 
 class OptionsTab(QtGui.QWidget):
@@ -182,9 +187,10 @@ class MainWindow(QtGui.QMainWindow):
 	
 	def __init__(self, cards = None):
 		super(MainWindow, self).__init__()
-		self.mainWidget = MainWidget(self, cards)
-		self.setCentralWidget(self.mainWidget)
+		self.cards = cards
+		self.mainWidget = MainWidget(self, self.cards)
 		self.initUI()
+		self.showAllCards()
 		
 	def initUI(self):
 		self.setWindowTitle('Macys Suit Getter')
@@ -197,43 +203,47 @@ class MainWindow(QtGui.QMainWindow):
 		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
 		msgBox.exec_()
 
-	def showResults(self):
-		self.resultsScreen = ResultsWidget(self) 
+	def showResults(self, controller):
+		self.resultsScreen = ResultsWidget(self, controller)
 		self.setCentralWidget(self.resultsScreen)
+
+	def showAllCards(self):
+		self.mainWidget = MainWidget(self, self.cards)
+		self.setCentralWidget(self.mainWidget)
 
 class ResultsWidget(QtGui.QWidget):
 	
 	def __init__(self, parent):
 		super(ResultsWidget, self).__init__(parent)
 		self.parent = parent
+		self.cardsKnown = controller.knownCards()
+		self.totalCards = controller.size()
 		self.initUI()
 		
 	def initUI(self):
 		if not self.hasFocus():
 			self.setFocus()
 		self.statusLabel = QtGui.QLabel("Try Harder!")
-		self.knownLabel = QtGui.QLabel('You knew 0/8 cards!')
+		self.knownLabel = QtGui.QLabel('You knew %s/%s cards!' %(self.cardsKnown, self.totalCards))
 		self.keepCheckBox = QtGui.QCheckBox('Keep all known cards', self)
 		mainLayout = QtGui.QVBoxLayout() 
 
-		self.previousButton = QtGui.QPushButton('Last', self)
-		self.previousButton.clicked.connect(self.previous)
-		flipButton = QtGui.QPushButton('Flip', self)
-		flipButton.clicked.connect(self.flip)
-		self.knownCheckbox = QtGui.QCheckBox('Known', self)
-		self.knownCheckbox.clicked.connect(self.modifyKnown)
-		self.nextButton = QtGui.QPushButton('Next', self)
-		self.nextButton.clicked.connect(self.next)
+		self.restartButton = QtGui.QPushButton('Restart', self)
+		self.restartButton.clicked.connect(self.restart)
+		self.restartAllButton = QtGui.QPushButton('Restart All', self)
+		self.restartAllButton.clicked.connect(self.restartAll)
+		self.endButton = QtGui.QPushButton('End', self)
+		self.endButton.clicked.connect(self.next)
 
 		bottomBar = QtGui.QHBoxLayout()
-		bottomBar.addWidget(self.previousButton)
-		bottomBar.addWidget(flipButton)
-		bottomBar.addWidget(self.knownCheckbox)
-		bottomBar.addWidget(self.nextButton)
+		bottomBar.addWidget(self.restartButton)
+		bottomBar.addWidget(self.restartAllButton)
+		bottomBar.addWidget(self.endButton)
 
 		mainLayout.addWidget(self.statusLabel)
 		mainLayout.addWidget(self.knownLabel)
 		mainLayout.addWidget(self.keepCheckBox)
+		mainLayout.addLayout(bottomBar)
 		self.setLayout(mainLayout)
 
 
@@ -253,13 +263,12 @@ class ResultsWidget(QtGui.QWidget):
 		else:
 			self.parent.showResults()
 
-	def previous(self):
-		if(controller.cardNumber > 0):
-			controller.previousCard()
-			self.showCard()
-			self.updateGui()
-		else:
-			print("OOPS")
+	def restart(self):
+		logger.info('Pressed restart')
+
+	def restartAll(self):
+		logger.info('Pressed restart all')
+		self.parent.showAllCards()
 
 	def showCard(self):
 		self.curCard = controller.getCurCard()
