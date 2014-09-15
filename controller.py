@@ -1,42 +1,43 @@
-import model
+from model import Deck
 
-deck = None
-cardNumber = 0
-
-def getCurCard():
-	return deck[cardNumber]
-
+#non-specific methods
 def makeCards(cards = None):
-	global deck
-	if(cards == None):
-		deck = [model.Card("front1", "back1"), model.Card("front2", "back2")]
-	else:
-		loadCards(cards)
+	return Deck(cards)
 
-def nextCard():
-	global cardNumber
-	cardNumber += 1
+#for specific methods
+class FlashCardController():
+	def __init__(self, view, model):
+		self.gui = view
+		self.deck = model
+		import copy
+		self.originalDeck = copy.deepcopy(model)
+		self.curCardCount = 0
 
-def previousCard():
-	global cardNumber
-	cardNumber -= 1
+	def getCurCard(self):
+		return self.deck.getCardAt(self.curCardCount)
 
-def curCardKnown():
-	return deck[cardNumber].getStatus()
+	def getCardNumber(self):
+		return self.curCardCount
 
-def setCardStatus(status):
-	global deck
-	deck[cardNumber].setStatus(status)
+	def size(self):
+		return self.deck.size()
 
-def loadCards(file):
-	global deck
-	import csv
-	deck = []
-	with open(file) as csvfile:
-		reader = csv.reader(csvfile)
-		for row in reader:
-			c = model.Card(row[0], row[1])
-			deck.append(c)
+	def curCardStatus(self):
+		return self.getCurCard().getStatus()
 
-def size():
-	return len(deck)
+	def setCardStatus(self, status):
+		self.getCurCard().setStatus(status)
+
+	def nextCard(self):
+		self.curCardCount  += 1
+
+	def previousCard(self):
+		self.curCardCount  -= 1
+
+	def knownCards(self):
+		return self.deck.knownCards()
+
+	def newControllerUnknownCards(self):
+		unknownCards = [x for x in self.deck.getCards() if not x.known]
+		unknownDeck = Deck(cards = unknownCards)
+		return FlashCardController(self.gui, unknownDeck)
