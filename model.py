@@ -63,6 +63,10 @@ class Deck():
 	def getCards(self):
 		return self.cards
 
+	def restartAll(self):
+		for c in self.cards:
+			c.setStatus(False)
+
 
 
 '''

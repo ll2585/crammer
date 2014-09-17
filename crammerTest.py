@@ -68,6 +68,26 @@ class GuiTester(unittest.TestCase):
 		mainWidget = self.form.centralWidget()
 		self.assertTrue('1/6' in mainWidget.cardLabel.text())
 
+	def testRestartAll(self):
+		nextButton = self.form.mainWidget.nextButton
+		knownBox = self.form.mainWidget.knownCheckbox
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		knownBox.click()
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		knownBox.click()
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		QTest.mouseClick(nextButton, Qt.LeftButton)
+		resultsWidget = self.form.centralWidget()
+		restartAllButton = resultsWidget.restartAllButton
+		QTest.mouseClick(restartAllButton, Qt.LeftButton)
+		mainWidget = self.form.centralWidget()
+		self.assertTrue('1/8' in mainWidget.cardLabel.text())
+
 class ModelTester(unittest.TestCase):
 	def setUp(self):
 		'''Create the Model'''

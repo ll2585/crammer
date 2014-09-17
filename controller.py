@@ -11,7 +11,7 @@ class FlashCardController():
 		self.deck = model
 		import copy
 		self.originalDeck = copy.deepcopy(model)
-		self.curCardCount = 0
+		self.init()
 
 	def getCurCard(self):
 		return self.deck.getCardAt(self.curCardCount)
@@ -41,3 +41,11 @@ class FlashCardController():
 		unknownCards = [x for x in self.deck.getCards() if not x.known]
 		unknownDeck = Deck(cards = unknownCards)
 		return FlashCardController(self.gui, unknownDeck)
+
+	def restartAll(self):
+		self.deck.restartAll()
+		self.init()
+
+	def init(self):
+		self.deck = self.deck.shuffledCards()
+		self.curCardCount = 0

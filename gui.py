@@ -66,7 +66,8 @@ class FlashCardWindow(QtGui.QMainWindow):
 		super(FlashCardWindow, self).__init__()
 		self.deck = controller.makeCards(cardFile)
 		self.controller = FlashCardController(self, self.deck)
-		self.mainWidget = FlashCardWidget(self, self.controller)
+		self.curController = self.controller
+		self.mainWidget = FlashCardWidget(self, self.curController)
 		self.setCentralWidget(self.mainWidget)
 		self.initUI()
 		
@@ -81,16 +82,16 @@ class FlashCardWindow(QtGui.QMainWindow):
 		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
 		msgBox.exec_()
 
-	def showResults(self):
-		self.resultsScreen = ResultsWidget(self, self.controller) 
+	def showResults(self, controller):
+		self.resultsScreen = ResultsWidget(self, controller) 
 		self.setCentralWidget(self.resultsScreen)
 
-	def showRestartDeck(self):
-		newController = self.controller.newControllerUnknownCards()
-		self.mainWidget = FlashCardWidget(self, newController)
+	def showRestartDeck(self, controller):
+		self.mainWidget = FlashCardWidget(self, controller)
 		self.setCentralWidget(self.mainWidget)
 
 	def showRestartAllDeck(self):
+		self.controller.restartAll()
 		self.mainWidget = FlashCardWidget(self, self.controller)
 		self.setCentralWidget(self.mainWidget)
 
@@ -160,7 +161,7 @@ class FlashCardWidget(QtGui.QWidget):
 			self.updateGui()
 		else:
 			self.releaseKeyboard()
-			self.parent.showResults()
+			self.parent.showResults(self.controller)
 
 	def previous(self):
 		if(self.controller.getCardNumber() > 0):
@@ -265,7 +266,9 @@ class ResultsWidget(QtGui.QWidget):
 			self.parent.showResults()
 
 	def restart(self):
-		self.parent.showRestartDeck()
+		self.controller.restartAll()
+		newController = self.controller if self.keepCheckBox.isChecked() else self.controller.newControllerUnknownCards()
+		self.parent.showRestartDeck(newController)
 
 	def restartAll(self):
 		self.parent.showRestartAllDeck()
