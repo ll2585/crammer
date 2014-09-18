@@ -27,6 +27,8 @@ class FlashCardController():
 
 	def setCardStatus(self, status):
 		self.getCurCard().setStatus(status)
+		unknownCards = [x for x in self.deck.getCards() if not x.known]
+		unknownDeck = Deck(cards = unknownCards)
 
 	def nextCard(self):
 		self.curCardCount  += 1

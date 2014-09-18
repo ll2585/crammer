@@ -60,6 +60,41 @@ class OptionsTab(QtGui.QWidget):
 		self.parentWidget.start()
 		self.startButton.setEnabled(False)
 
+class DeckWindow(QtGui.QMainWindow):
+	
+	def __init__(self, cardFile = None):
+		super(DeckWindow, self).__init__()
+		self.deck = controller.makeCards(cardFile)
+		self.controller = FlashCardController(self, self.deck)
+		self.curController = self.controller
+		self.mainWidget = FlashCardWidget(self, self.curController)
+		self.setCentralWidget(self.mainWidget)
+		self.initUI()
+		
+	def initUI(self):
+		self.setWindowTitle('Macys Suit Getter')
+		self.setGeometry(300,300,622,280)
+		self.show()
+	
+	def showAbout(self):
+		msgBox = QtGui.QMessageBox()
+		msgBox.setWindowTitle("About")
+		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
+		msgBox.exec_()
+
+	def showResults(self, controller):
+		self.resultsScreen = ResultsWidget(self, controller) 
+		self.setCentralWidget(self.resultsScreen)
+
+	def showRestartDeck(self, controller):
+		self.mainWidget = FlashCardWidget(self, controller)
+		self.setCentralWidget(self.mainWidget)
+
+	def showRestartAllDeck(self):
+		self.controller.restartAll()
+		self.mainWidget = FlashCardWidget(self, self.controller)
+		self.setCentralWidget(self.mainWidget)
+
 class FlashCardWindow(QtGui.QMainWindow):
 	
 	def __init__(self, cardFile = None):
@@ -180,7 +215,6 @@ class FlashCardWidget(QtGui.QWidget):
 		self.controller.setCardStatus(not cardStatus)
 		self.updateGui()
 
-
 	def updateGui(self):
 		self.shownSide.setText(self.curCard.getFront())
 		self.cardLabel.setText("Card %s/%s" %(self.controller.getCardNumber()+1, self.controller.size()))
@@ -266,8 +300,8 @@ class ResultsWidget(QtGui.QWidget):
 			self.parent.showResults()
 
 	def restart(self):
-		self.controller.restartAll()
 		newController = self.controller if self.keepCheckBox.isChecked() else self.controller.newControllerUnknownCards()
+		newController.restartAll()
 		self.parent.showRestartDeck(newController)
 
 	def restartAll(self):
@@ -276,27 +310,6 @@ class ResultsWidget(QtGui.QWidget):
 	def showCard(self):
 		self.curCard = controller.getCurCard()
 		self.showingFront = True
-
-	def modifyKnown(self):
-		cardStatus = controller.curCardKnown()
-		controller.setCardStatus(not cardStatus)
-		self.updateGui()
-
-
-	def updateGui(self):
-		self.shownSide.setText(self.curCard.getFront())
-		self.cardLabel.setText("Card %s/%s" %(controller.cardNumber+1, len(controller.deck)))
-		if(controller.cardNumber == 0):
-			self.previousButton.setEnabled(False)
-		else:
-			self.previousButton.setEnabled(True)
-
-		if(controller.cardNumber == len(controller.deck)-1):
-			self.nextButton.setText("To Results!")
-		else:
-			self.nextButton.setText('Next')
-
-		self.knownCheckbox.setChecked(controller.curCardKnown())
 
 	def keyPressEvent(self, e):
 		pass
@@ -331,8 +344,6 @@ class APIKeyTable(QtGui.QTableWidget):
 def main(cards):
 	
 	app = QtGui.QApplication(sys.argv)
+	db = 'decks.db'
 	ex = FlashCardWindow(cards)
 	sys.exit(app.exec_())
-
-if __name__ == '__main__':
-	main()  
