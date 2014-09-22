@@ -29,8 +29,8 @@ class Deck():
 			self.makeCards(f)
 
 	def makeCards(self, f):
-		import csv
-		with open(f) as csvfile:
+		import csv, codecs
+		with codecs.open(f, 'r', encoding = 'utf8') as csvfile:
 			reader = csv.reader(csvfile)
 			for row in reader:
 				c = Card(row[0], row[1])

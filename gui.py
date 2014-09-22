@@ -64,10 +64,7 @@ class DeckWindow(QtGui.QMainWindow):
 	
 	def __init__(self, cardFile = None):
 		super(DeckWindow, self).__init__()
-		self.deck = controller.makeCards(cardFile)
-		self.controller = FlashCardController(self, self.deck)
-		self.curController = self.controller
-		self.mainWidget = FlashCardWidget(self, self.curController)
+		self.mainWidget = DeckWidget(self, cardFile)
 		self.setCentralWidget(self.mainWidget)
 		self.initUI()
 		
@@ -82,19 +79,57 @@ class DeckWindow(QtGui.QMainWindow):
 		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
 		msgBox.exec_()
 
-	def showResults(self, controller):
-		self.resultsScreen = ResultsWidget(self, controller) 
-		self.setCentralWidget(self.resultsScreen)
+class DeckWidget(QtGui.QWidget):
+	
+	def __init__(self, parent, cardFile):
+		super(DeckWidget, self).__init__(parent)
+		self.parent = parent
+		self.cardFile = cardFile
+		self.initUI()
+		
+	def makeFocus(self):
+		self.setFocus()
+		self.grabKeyboard()
 
-	def showRestartDeck(self, controller):
-		self.mainWidget = FlashCardWidget(self, controller)
-		self.setCentralWidget(self.mainWidget)
+	def initUI(self):
+		if not self.hasFocus():
+			self.makeFocus()
+		self.flashCards = FlashCardTable(self.cardFile)
+		mainLayout = QtGui.QVBoxLayout() 
 
-	def showRestartAllDeck(self):
-		self.controller.restartAll()
-		self.mainWidget = FlashCardWidget(self, self.controller)
-		self.setCentralWidget(self.mainWidget)
+		topBar = QtGui.QHBoxLayout()
+		topBar.addWidget(self.flashCards)
 
+		mainLayout.addLayout(topBar)
+		self.setLayout(mainLayout)
+
+
+class FlashCardTable(QtGui.QTableWidget):
+	def __init__(self, *args):
+		QtGui.QTableWidget.__init__(self, data, *args)
+		self.data = data
+		self.setColumnCount(4)
+		headerLabels = ['Test?', '#', 'Front Side', 'Back Side']
+		self.setHorizontalHeaderLabels(headerLabels)
+		self.verticalHeader().hide()
+		self.setData()
+		self.resizeColumnsToContents()
+
+	def setData(self):
+		pass
+		'''
+		self.setRowCount(len(self.data))
+		n = 0
+		for key in self.data:
+			labelItem = QtGui.QTableWidgetItem(key)
+			labelItem.setFlags(QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled)
+			hasKey = self.data[key] != ''
+			valueItem =  QtGui.QTableWidgetItem(str(hasKey))
+			valueItem.setFlags(QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled)
+			self.setItem(n, 0, labelItem)
+			self.setItem(n, 1, valueItem)
+			n += 1
+		'''
 class FlashCardWindow(QtGui.QMainWindow):
 	
 	def __init__(self, cardFile = None):
@@ -156,6 +191,8 @@ class FlashCardWidget(QtGui.QWidget):
 
 		middleBar = QtGui.QHBoxLayout()
 		self.shownSide = QtGui.QLabel()
+		bigFont = QtGui.QFont("Arial", 20)
+		self.shownSide.setFont(bigFont)
 		middleBar.addWidget(self.shownSide)
 
 		self.previousButton = QtGui.QPushButton('Last', self)
@@ -213,7 +250,7 @@ class FlashCardWidget(QtGui.QWidget):
 	def modifyKnown(self):
 		cardStatus = self.controller.curCardStatus()
 		self.controller.setCardStatus(not cardStatus)
-		self.updateGui()
+		self.knownCheckbox.setChecked(self.controller.curCardStatus())
 
 	def updateGui(self):
 		self.shownSide.setText(self.curCard.getFront())
@@ -312,7 +349,8 @@ class ResultsWidget(QtGui.QWidget):
 		self.showingFront = True
 
 	def keyPressEvent(self, e):
-		pass
+		if (e.key() == QtCore.Qt.Key_Right):
+			self.restart()
 
 class APIKeyTable(QtGui.QTableWidget):
 	def __init__(self, data, *args):
