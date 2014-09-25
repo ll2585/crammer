@@ -191,6 +191,7 @@ class FlashCardWidget(QtGui.QWidget):
 
 		middleBar = QtGui.QHBoxLayout()
 		self.shownSide = QtGui.QLabel()
+		self.shownSide.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse);
 		bigFont = QtGui.QFont("Arial", 20)
 		self.shownSide.setFont(bigFont)
 		middleBar.addWidget(self.shownSide)
@@ -203,16 +204,30 @@ class FlashCardWidget(QtGui.QWidget):
 		self.knownCheckbox.clicked.connect(self.modifyKnown)
 		self.nextButton = QtGui.QPushButton('Next', self)
 		self.nextButton.clicked.connect(self.next)
+		self.copyButton = QtGui.QPushButton('Copy Side', self)
+		self.copyButton.clicked.connect(self.copySide)
+		self.lookupButton = QtGui.QPushButton('Look up Side', self)
+		self.lookupButton.clicked.connect(self.lookup)
 
 		bottomBar = QtGui.QHBoxLayout()
 		bottomBar.addWidget(self.previousButton)
 		bottomBar.addWidget(flipButton)
 		bottomBar.addWidget(self.knownCheckbox)
 		bottomBar.addWidget(self.nextButton)
+		bottomBar.addWidget(self.copyButton)
+		bottomBar.addWidget(self.lookupButton)
+
+		self.definitionBox = QtGui.QLineEdit()
+		self.getDefinitionButton = QtGui.QPushButton('Get Definition', self)
+		self.getDefinitionButton.clicked.connect(self.getDefinition)
+		naverBar = QtGui.QHBoxLayout()
+		naverBar.addWidget(self.definitionBox)
+		naverBar.addWidget(self.getDefinitionButton)
 
 		mainLayout.addLayout(topBar)
 		mainLayout.addLayout(middleBar)
 		mainLayout.addLayout(bottomBar)
+		mainLayout.addLayout(naverBar)
 		self.setLayout(mainLayout)
 
 		self.showCard()
@@ -225,6 +240,11 @@ class FlashCardWidget(QtGui.QWidget):
 		else:
 			self.shownSide.setText(self.curCard.getFront())
 			self.showingFront = True
+
+	def getDefinition(self):
+		import koreanUtils
+		word = self.shownSide.text()
+		self.definitionBox.setText(str(koreanUtils.getDefinition(word)))
 
 	def next(self):
 		if(self.controller.getCardNumber() + 1 < self.controller.size()):
@@ -246,6 +266,18 @@ class FlashCardWidget(QtGui.QWidget):
 	def showCard(self):
 		self.curCard = self.controller.getCurCard()
 		self.showingFront = True
+
+	def copySide(self):
+		clipboard = QtGui.QApplication.clipboard()
+		text = self.shownSide.text()
+		clipboard.setText(text)
+
+	def lookup(self):
+		text = self.shownSide.text()
+		import webbrowser
+		naverlink = 'http://endic.naver.com/search.nhn?sLn=en&searchOption=all&query='
+		link = '%s%s' %(naverlink, text)
+		webbrowser.open(link)
 
 	def modifyKnown(self):
 		cardStatus = self.controller.curCardStatus()
