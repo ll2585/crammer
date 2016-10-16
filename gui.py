@@ -1,99 +1,8 @@
 import controller
-import os, sys 
+import sys
 from PyQt4 import QtGui, QtCore
 from controller import FlashCardController
 
-class NoTypeTextEdit(QtGui.QTextEdit):
-
-	def keyPressEvent(self, event):
-		event.ignore()
-
-class OptionsTab(QtGui.QWidget):
-	
-	def __init__(self, parent, parentWidget):
-		super(OptionsTab, self).__init__(parent)
-		self.parent = parent
-		self.parentWidget = parentWidget
-		self.initUI()
-
-		
-	def initUI(self):
-		pass
-		self.layout = QtGui.QHBoxLayout() 
-
-		self.apiKeysLayout = QtGui.QGridLayout()
-
-		self.apiKeyTable = APIKeyTable(controller.apiKeys())
-		self.apiKeysLayout.addWidget(self.apiKeyTable, 0, 1, 1, 2)
-
-		editKeysButton = QtGui.QPushButton('Edit Keys', self)
-		editKeysButton.clicked.connect(self.parentWidget.editKeys)
-		self.apiKeysLayout.addWidget(editKeysButton, 1, 2, )
-		self.layout.addLayout(self.apiKeysLayout)
-
-		spacer = QtGui.QSpacerItem(200,40,QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
-		self.layout.addItem(spacer)
-
-		verticalLine 	=  QtGui.QFrame()
-		verticalLine.setFrameStyle(QtGui.QFrame.VLine)
-		verticalLine.setSizePolicy(QtGui.QSizePolicy.Minimum,QtGui.QSizePolicy.Expanding)
-		self.layout.addWidget(verticalLine)
-
-		self.rightSide = QtGui.QVBoxLayout()
-		self.rightForm = QtGui.QFormLayout()
-		self.delay = QtGui.QLineEdit(str(30))
-		self.rightForm.addRow('Delay:', self.delay)
-
-		self.rightSide.addLayout(self.rightForm)
-
-		self.startButton = QtGui.QPushButton('Start', self)
-		self.startButton.clicked.connect(self.startThread)
-		self.rightSide.addWidget(self.startButton)
-
-		self.layout.addLayout(self.rightSide)
-		self.setLayout(self.layout)
-
-	def getDelay(self):
-		return int(self.delay.text())
-
-	def startThread(self):
-		self.parentWidget.start()
-		self.startButton.setEnabled(False)
-
-class DeckWindow(QtGui.QMainWindow):
-	
-	def __init__(self, cardFile = None):
-		super(DeckWindow, self).__init__()
-		self.deck = controller.makeCards(cardFile)
-		self.controller = FlashCardController(self, self.deck)
-		self.curController = self.controller
-		self.mainWidget = FlashCardWidget(self, self.curController)
-		self.setCentralWidget(self.mainWidget)
-		self.initUI()
-		
-	def initUI(self):
-		self.setWindowTitle('Macys Suit Getter')
-		self.setGeometry(300,300,622,280)
-		self.show()
-	
-	def showAbout(self):
-		msgBox = QtGui.QMessageBox()
-		msgBox.setWindowTitle("About")
-		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
-		msgBox.exec_()
-
-	def showResults(self, controller):
-		self.resultsScreen = ResultsWidget(self, controller) 
-		self.setCentralWidget(self.resultsScreen)
-
-	def showRestartDeck(self, controller):
-		self.mainWidget = FlashCardWidget(self, controller)
-		self.setCentralWidget(self.mainWidget)
-
-	def showRestartAllDeck(self):
-		self.controller.restartAll()
-		self.mainWidget = FlashCardWidget(self, self.controller)
-		self.setCentralWidget(self.mainWidget)
 
 class FlashCardWindow(QtGui.QMainWindow):
 	
@@ -107,15 +16,9 @@ class FlashCardWindow(QtGui.QMainWindow):
 		self.initUI()
 		
 	def initUI(self):
-		self.setWindowTitle('Macys Suit Getter')
+		self.setWindowTitle('Crammer')
 		self.setGeometry(300,300,622,280)
 		self.show()
-	
-	def showAbout(self):
-		msgBox = QtGui.QMessageBox()
-		msgBox.setWindowTitle("About")
-		msgBox.setText("Copy a Macys Suit URl into the field and press the button. Enter a file name (with .csv or whatever). It makes it a csv.\nCreated by Luke Li on March 10, 2014")
-		msgBox.exec_()
 
 	def showResults(self, controller):
 		self.resultsScreen = ResultsWidget(self, controller) 
@@ -146,13 +49,10 @@ class FlashCardWidget(QtGui.QWidget):
 		if not self.hasFocus():
 			self.makeFocus()
 		self.cardLabel = QtGui.QLabel()
-		card = QtGui.QLabel('Card')
-		sideLabel = QtGui.QLabel('Front Side')
 		mainLayout = QtGui.QVBoxLayout() 
 
 		topBar = QtGui.QHBoxLayout()
 		topBar.addWidget(self.cardLabel)
-		topBar.addWidget(sideLabel)
 
 		middleBar = QtGui.QHBoxLayout()
 		self.shownSide = QtGui.QLabel()
@@ -240,8 +140,6 @@ class FlashCardWidget(QtGui.QWidget):
 		elif(e.key() == QtCore.Qt.Key_Space):
 			self.modifyKnown()
 
-	def numCards(self):
-		return self.controller.size()
 
 class ResultsWidget(QtGui.QWidget):
 	
@@ -261,12 +159,12 @@ class ResultsWidget(QtGui.QWidget):
 		self.keepCheckBox = QtGui.QCheckBox('Keep all known cards', self)
 		mainLayout = QtGui.QVBoxLayout() 
 
-		self.restartButton = QtGui.QPushButton('Restart', self)
+		self.restartButton = QtGui.QPushButton('Restart This Session', self)
 		self.restartButton.clicked.connect(self.restart)
-		self.restartAllButton = QtGui.QPushButton('Restart All', self)
+		self.restartAllButton = QtGui.QPushButton('Restart All the Cards', self)
 		self.restartAllButton.clicked.connect(self.restartAll)
 		self.endButton = QtGui.QPushButton('End', self)
-		self.endButton.clicked.connect(self.next)
+		self.endButton.clicked.connect(self.end)
 
 		restartBar = QtGui.QHBoxLayout()
 		restartBar.addWidget(self.restartButton)
@@ -282,22 +180,9 @@ class ResultsWidget(QtGui.QWidget):
 		mainLayout.addLayout(bottomBar)
 		self.setLayout(mainLayout)
 
-
-	def flip(self):
-		if(self.showingFront):
-			self.shownSide.setText(self.curCard.getBack())
-			self.showingFront = False
-		else:
-			self.shownSide.setText(self.curCard.getFront())
-			self.showingFront = True
-
-	def next(self):
-		if(controller.cardNumber + 1 < len(controller.deck)):
-			controller.nextCard()
-			self.showCard()
-			self.updateGui()
-		else:
-			self.parent.showResults()
+	def end(self):
+		import sys
+		sys.exit()
 
 	def restart(self):
 		newController = self.controller if self.keepCheckBox.isChecked() else self.controller.newControllerUnknownCards()
@@ -305,45 +190,12 @@ class ResultsWidget(QtGui.QWidget):
 		self.parent.showRestartDeck(newController)
 
 	def restartAll(self):
+		self.controller.init()
 		self.parent.showRestartAllDeck()
 
-	def showCard(self):
-		self.curCard = controller.getCurCard()
-		self.showingFront = True
-
-	def keyPressEvent(self, e):
-		pass
-
-class APIKeyTable(QtGui.QTableWidget):
-	def __init__(self, data, *args):
-		QtGui.QTableWidget.__init__(self, *args)
-		self.data = data
-		self.setColumnCount(2)
-		headerLabels = ['API', 'Has Key']
-		self.setHorizontalHeaderLabels(headerLabels)
-		self.verticalHeader().hide()
-		self.setData()
-		self.resizeColumnsToContents()
-
-	def setData(self):
-		pass
-		'''
-		self.setRowCount(len(self.data))
-		n = 0
-		for key in self.data:
-			labelItem = QtGui.QTableWidgetItem(key)
-			labelItem.setFlags(QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled)
-			hasKey = self.data[key] != ''
-			valueItem =  QtGui.QTableWidgetItem(str(hasKey))
-			valueItem.setFlags(QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled)
-			self.setItem(n, 0, labelItem)
-			self.setItem(n, 1, valueItem)
-			n += 1
-		'''
 
 def main(cards):
-	
+
 	app = QtGui.QApplication(sys.argv)
-	db = 'decks.db'
 	ex = FlashCardWindow(cards)
 	sys.exit(app.exec_())

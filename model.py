@@ -45,15 +45,6 @@ class Deck():
 	def size(self):
 		return len(self.cards)
 
-	#returns an array of decks of size factor, except the last one
-	def subDeck(self, factor = 8, cards = None):
-		cardsToSubSet = cards if cards is not None else self.cards
-		subset = [cardsToSubSet[i:i+factor] for i in range(0, len(cardsToSubSet), factor)]
-		deckArray = []
-		for s in subset:
-			deckArray.append(Deck(cards = s))
-		return(deckArray)
-
 	def getCardAt(self, location):
 		return self.cards[location]
 
@@ -66,27 +57,3 @@ class Deck():
 	def restartAll(self):
 		for c in self.cards:
 			c.setStatus(False)
-
-
-
-'''
-
-def nextCard():
-	global cardNumber
-	cardNumber += 1
-
-def previousCard():
-	global cardNumber
-	cardNumber -= 1
-
-def curCardKnown():
-	return deck[cardNumber].getStatus()
-
-def setCardStatus(status):
-	global deck
-	deck[cardNumber].setStatus(status)
-
-def loadCards(file):
-
-
-	'''

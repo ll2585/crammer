@@ -11,8 +11,6 @@ class GuiTester(unittest.TestCase):
 		self.app = QApplication(sys.argv)
 		self.form = gui.FlashCardWindow("test.csv")
 
-	def test_demo(self):
-		self.assertEqual(self.form.mainWidget.numCards(), 8)
 
 	def test_knowZero(self):
 		nextButton = self.form.mainWidget.nextButton
@@ -101,12 +99,6 @@ class ModelTester(unittest.TestCase):
 	def testImportedDeck(self):
 		self.assertEqual(self.deckCards.size(), 8)
 
-	def testSubsetDeck(self):
-		for deck in self.deckCards.subDeck():
-			self.assertEqual(deck.size(), 8)
-		shuffledCards = self.deckCards.shuffledCards()
-		for deck in shuffledCards.subDeck():
-			self.assertEqual(deck.size(), 8)
 
 if __name__ == "__main__":
 	unittest.main()
